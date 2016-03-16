@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tweets Visualization</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
+<script src="http://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+
+<link
+	    href="http://cdn.pydata.org/bokeh/release/bokeh-0.10.0.min.css"
+	    rel="stylesheet" type="text/css">
+	<script src="http://cdn.pydata.org/bokeh/release/bokeh-0.10.0.min.js"></script>
+//data send from django application, generated with Bokeh
+{{the_script| safe}}
+<style>
+#map {
+    height: 600px;
+}
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+</style>
+</head>
+<body>
+<script src="http://code.jquery.com/jquery-2.2.0.min.js"></script>
+
+
+
+<div id="map"></div>
+<script>
+
+// Load the tile images from OpenStreetMap
+var mytiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+});
+// Initialise an empty map
+var map = L.map('map');
+
+
+	{% autoescape off %}
+	var data={{geojsonData}}
+	{% endautoescape %}
+
+function getColor(d) {
+    return d > 0.9 ? 'green' :
+           d > 0.5  ? 'yellow' :
+           d > 0.1   ? 'red' :
+                      'brown';
+}
+
+
+
+	function getOpacity(d) {
+        switch (d) {
+            case 'hilary clinton': return "blue";
+            case 'trump':   return "red";
+        }}
+
+    var myStyle = function(data) {return{
+	fillColor:  getColor(data.feature.properties.sentiment_positive),
+        radius: 10,
+        weight: 1,
+	color: '#666',
+        opacity: 0.5,
+        fillOpacity: 0.5};
+    };
+
+	var info = L.control();
+	info.onAdd = function (map) {
+    			this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    			this.update();
+    			return this._div;
+				};
+
+	info.update = function (props) {
+    			this._div.innerHTML = '<h4>What Tweeter Says</h4>' +  (props ?
+       			'<b>' + props.created_at + '</b><br />' + props.text : 'Hover over a Tweet');
+					};
+
+	info.addTo(map);
+	
+	var geojson;
+	
+	function highlightFeature(e) {
+    		var layer = e.target;
+
+    		layer.setStyle({
+        		weight: 5,
+        		color: '#777',
+        		dashArray: '',
+       			fillOpacity: 0.7
+    				});
+    	info.update(layer.feature.properties);
+				}
+				
+				
+
+	function resetHighlight(e) {
+			geojson.resetStyle(e.target);
+    			info.update();
+				}
+
+
+
+	function zoomToFeature(e) {
+		    map.fitBounds(e.target.getBounds());
+					}
+
+
+
+	function onEachFeature(feature, layer) {
+    		layer.on({
+        		mouseover: highlightFeature,
+        		mouseout: resetHighlight,
+        		click: zoomToFeature
+    			});
+						}
+
+	
+	geojson = L.geoJson(data, {
+        pointToLayer: function (feature) {
+            return L.circleMarker(feature.geometry.coordinates, myStyle);
+        },
+	style: function(feature){return{
+	 fillColor: getColor(feature.properties.sentiment_positive),
+	color: '#666'};
+				},
+	onEachFeature: onEachFeature
+    });
+    
+geojson.addTo(map);
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [-1, 0.1, 0.5, 0.9],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i]+0.1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '->' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+
+// Add the tiles to the map, and initialise the view in the middle of Europe
+//map.addLayer(mytiles).setView([{{latitude}}, {{longitude}}], 5);
+map.addLayer(mytiles).setView([40.5, -94.0], 4);
+
+</script>
+</body>
