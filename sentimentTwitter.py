@@ -1,10 +1,12 @@
 """
 supervized learning machine on unstructured data
 sentiment extraction
-my dataframe reads data from my local database
+my dataframe is constructed from data from my local database
 I encourage you to use pandas to create one with 'text' and 'sentiment' columns
 Here you have data cleaning functions, logistic regression
 I will post the link to training and testing sets reference
+It is made of 25,000 reviews for training and test set each.
+12,500 of negative, 12,500 of positive selected from 1 to 3 and 7 to 10 (min=1, max=10) rates. We avoided neutral reviews
 """
 
 import scipy.stats as st
