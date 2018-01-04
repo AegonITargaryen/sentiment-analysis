@@ -50,7 +50,7 @@ def cleanData(tweet):
      tweet =re.sub(r"<br /><br />", " ", tweet)
 
  except:
-          print "Unexpected error:", sys.exc_info()[0]
+          print "regex cleaning error:", sys.exc_info()[0]
  return tweet
 
  def plot_confusion_matrix(cm, title='Confusion matrix', cmap=plt.cm.Blues):
