@@ -21,7 +21,7 @@ import scipy.stats as st
 from sklearn.model_selection import  RandomizedSearchCV
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-
+from matplotlib import pyplot as plt
 from nltk.corpus import stopwords # Import the stop word list
 
 
